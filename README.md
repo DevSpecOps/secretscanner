@@ -2,8 +2,10 @@
 
 <p align="center">
   <img src="https://img.shields.io/github/go-mod/go-version/DevSpecOps/secretscanner" alt="Go version">
+  <img src="https://img.shields.io/github/v/release/DevSpecOps/secretscanner" alt="GitHub release">
   <img src="https://img.shields.io/github/actions/workflow/status/DevSpecOps/secretscanner/ci.yaml?branch=main" alt="CI">
   <img src="https://goreportcard.com/badge/github.com/DevSpecOps/secretscanner" alt="Go Report Card">
+  <img src="https://img.shields.io/github/license/DevSpecOps/secretscanner" alt="License Apache 2.0">
   <img src="https://img.shields.io/github/stars/DevSpecOps/secretscanner?style=social" alt="GitHub stars">
 </p>
 
@@ -78,6 +80,6 @@ Please read CONTRIBUTING.md. To start developing:
 bash
 make dev
 📄 License
-Apache 2.0 – free for self-hosting, modification, and commercial use.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
 
 ⭐ Star this repo if you find it useful – help others discover it!
