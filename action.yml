@@ -1,0 +1,32 @@
+name: 'SecretScanner'
+description: 'Scan repository for secrets (AWS keys, GitHub tokens, RSA keys)'
+author: 'DevSpecOps'
+
+inputs:
+  path:
+    description: 'Path to scan (default: .)'
+    required: false
+    default: '.'
+  dry-run:
+    description: 'Dry run – report only, no revocation (default: true)'
+    required: false
+    default: 'true'
+  json:
+    description: 'Output JSON format (default: false)'
+    required: false
+    default: 'false'
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  args:
+    - '--path'
+    - ${{ inputs.path }}
+    - '--dry-run'
+    - ${{ inputs.dry-run }}
+    - '--json'
+    - ${{ inputs.json }}
+
+branding:
+  icon: 'shield'
+  color: 'green'
