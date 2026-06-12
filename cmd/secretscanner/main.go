@@ -5,28 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"regexp"
-	"strings"
 
+	"github.com/DevSpecOps/secretscanner/internal/rules"
 	"github.com/DevSpecOps/secretscanner/internal/scanner"
 )
-
-type regexEngine struct{}
-
-func (r regexEngine) Detect(line string) (string, string, bool) {
-	awsRe := regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
-	if match := awsRe.FindString(line); match != "" {
-		return match, "AWS001", true
-	}
-	if strings.Contains(line, "BEGIN RSA PRIVATE KEY") {
-		return "RSA_PRIVATE_KEY", "RSA001", true
-	}
-	ghRe := regexp.MustCompile(`github_pat_[A-Za-z0-9_]{22,}`)
-	if match := ghRe.FindString(line); match != "" {
-		return match, "GHPAT001", true
-	}
-	return "", "", false
-}
 
 var (
 	scanPath   string
@@ -40,7 +22,13 @@ func main() {
 	flag.BoolVar(&jsonOutput, "json", false, "Output JSON")
 	flag.Parse()
 
-	engine := &regexEngine{}
+	// Initialize Rego engine
+	engine, err := rules.NewRegoEngine()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to load Rego policies: %v\n", err)
+		os.Exit(1)
+	}
+
 	findings, err := scanner.Scan(scanPath, engine)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Scan error: %v\n", err)
@@ -64,7 +52,7 @@ func main() {
 	}
 
 	if !dryRun && len(findings) > 0 {
-		fmt.Fprintln(os.Stderr, "⚠️ Revocation would happen here")
+		fmt.Fprintln(os.Stderr, "⚠️ Revocation would happen here (coming in Step 3)")
 		os.Exit(1)
 	}
 }
