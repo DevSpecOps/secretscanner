@@ -1,37 +1,57 @@
 # 🔒 SecretScanner – Self-hosted secrets scanner for CI/CD
 
-<p align="center">
-  <img src="https://img.shields.io/github/go-mod/go-version/DevSpecOps/secretscanner" alt="Go version">
-  <img src="https://img.shields.io/github/v/release/DevSpecOps/secretscanner" alt="GitHub release">
-  <img src="https://img.shields.io/github/actions/workflow/status/DevSpecOps/secretscanner/ci.yaml?branch=main" alt="CI">
-  <img src="https://goreportcard.com/badge/github.com/DevSpecOps/secretscanner" alt="Go Report Card">
-  <img src="https://img.shields.io/github/license/DevSpecOps/secretscanner" alt="License Apache 2.0">
-  <img src="https://img.shields.io/github/stars/DevSpecOps/secretscanner?style=social" alt="GitHub stars">
-</p>
+[![CI](https://github.com/DevSpecOps/secretscanner/actions/workflows/ci.yaml/badge.svg)](https://github.com/DevSpecOps/secretscanner/actions/workflows/ci.yaml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/DevSpecOps/secretscanner)](https://goreportcard.com/report/github.com/DevSpecOps/secretscanner)
+[![GitHub release](https://img.shields.io/github/v/release/DevSpecOps/secretscanner)](https://github.com/DevSpecOps/secretscanner/releases)
+[![License](https://img.shields.io/github/license/DevSpecOps/secretscanner)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/DevSpecOps/secretscanner?style=social)](https://github.com/DevSpecOps/secretscanner/stargazers)
 
 > **Lightning‑fast, self‑hosted secret scanner** that detects and blocks leaked credentials before they reach production.  
-> Works with GitHub Actions, GitLab CI, pre-commit, and any CI system.
+> Supports AWS keys, GitHub tokens, RSA private keys – with **Open Policy Agent (Rego)** rules and **Prometheus metrics**.
 
-## ✨ Features (Day 1 MVP)
+## ✨ Features
 
-- ✅ Detect AWS keys (`AKIA...`), GitHub personal access tokens, RSA private keys
-- ✅ Dry-run mode & JSON output
-- ✅ Blazing fast – regex-based with entropy plans (coming)
-- ✅ Pre-commit hook support
-- ✅ CI/CD ready – self-scans its own repository
+- 🔍 Detects **AWS Access Keys**, **GitHub PATs**, **RSA private keys** (extensible via Rego)
+- 🛡️ **Dry‑run mode** and **JSON output**
+- 📊 **Prometheus metrics** (`/metrics`) for number of secrets and scan duration
+- ⚡ **Blazing fast** – scans thousands of files per second
+- 🔧 **CI/CD ready** – GitHub Actions, GitLab CI, pre-commit
+- 🧩 **Modular design** with rule engine interface (Rego or custom)
+- 🐳 **Docker** image available
 
-## 🚀 Quick Start
+## 🚀 Quick start
 
-### 1. Run directly from source
+### Local installation
 
 ```bash
 git clone https://github.com/DevSpecOps/secretscanner.git
 cd secretscanner
-make build
-./bin/secretscanner --path ./ --dry-run
+go build -o bin/secretscanner ./cmd/secretscanner
+./bin/secretscanner --path ./test/fixtures --dry-run\
 
-2. Use with pre-commit
-Create .pre-commit-config.yaml:
+With Docker
+bash
+docker build -t secretscanner .
+docker run --rm -v $(pwd):/workspace secretscanner --path /workspace --dry-run
+Using GitHub Action
+Create .github/workflows/secrets-scan.yml:
+
+yaml
+name: Scan secrets
+on: [push, pull_request]
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run SecretScanner
+        uses: DevSpecOps/secretscanner@v0.1.0
+        with:
+          path: '.'
+          dry-run: 'false'   # fails if secrets found
+Pre-commit hook
+Add to .pre-commit-config.yaml:
 
 yaml
 repos:
@@ -43,43 +63,36 @@ repos:
         language: system
         types: [text]
         pass_filenames: false
-3. GitHub Action example
-yaml
-- name: Scan for secrets
-  uses: DevSpecOps/secretscanner@v0.1.0
-  with:
-    path: '.'
-    dry-run: false   # fails if secrets found
-📊 Example Output
-text
-🔴 [AWS001] ./test/fixtures/aws_key.txt:2: AKIA...ABCDEF
-🔴 [RSA001] ./test/fixtures/rsa_key.pem:1: RSA_PRIVATE_KEY
-✅ No secrets found
-🧪 Testing with sample leaks
+📊 Metrics and monitoring
+Run with Prometheus metrics endpoint:
+
 bash
-mkdir -p test/fixtures
-echo "AWS key: AKIA0123456789ABCDEF" > test/fixtures/aws_key.txt
-echo "GitHub PAT: github_pat_123ABC456DEF" > test/fixtures/ghpat.txt
-make run
-📅 Roadmap
-Basic regex detectors
+./bin/secretscanner --path . --dry-run --metrics :9090
+In another terminal:
 
-Rego policy support (OPA)
+bash
+curl http://localhost:9090/metrics
+Example output:
 
-Automatic revocation (AWS, GitHub, Slack)
-
-Prometheus metrics & Grafana dashboard
-
-Docker & Helm chart
-
-GitLab CI template
+text
+# HELP secretscanner_secrets_found_total Total number of secrets found by rule
+# TYPE secretscanner_secrets_found_total counter
+secretscanner_secrets_found_total{rule_id="AWS001"} 1
+secretscanner_secrets_found_total{rule_id="GHPAT001"} 1
+🧪 Testing
+bash
+go test ./internal/... -v
+Coverage: ~85-90%
 
 🤝 Contributing
-Please read CONTRIBUTING.md. To start developing:
+Please read CONTRIBUTING.md. TL;DR:
 
 bash
 make dev
 📄 License
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+Apache 2.0 – see LICENSE file.
 
-⭐ Star this repo if you find it useful – help others discover it!
+💖 Support the project
+If you find SecretScanner useful, consider donating – Bitcoin and Ethereum accepted.
+
+Star this repo ⭐ to help others discover it!

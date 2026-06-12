@@ -1,0 +1,7 @@
+- id: secretscanner
+  name: SecretScanner
+  description: Scans for secrets using SecretScanner
+  entry: secretscanner --path
+  language: system
+  types: [text]
+  pass_filenames: false
