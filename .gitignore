@@ -6,3 +6,4 @@
 *.out
 coverage.txt
 .DS_Store
+tools/qrgen/

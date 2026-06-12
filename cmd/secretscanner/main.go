@@ -5,96 +5,53 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/DevSpecOps/secretscanner/internal/scanner"
 )
 
-type Finding struct {
-	File   string `json:"file"`
-	Line   int    `json:"line"`
-	Secret string `json:"secret"`
-	RuleID string `json:"rule_id"`
+type regexEngine struct{}
+
+func (r regexEngine) Detect(line string) (string, string, bool) {
+	awsRe := regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
+	if match := awsRe.FindString(line); match != "" {
+		return match, "AWS001", true
+	}
+	if strings.Contains(line, "BEGIN RSA PRIVATE KEY") {
+		return "RSA_PRIVATE_KEY", "RSA001", true
+	}
+	ghRe := regexp.MustCompile(`github_pat_[A-Za-z0-9_]{22,}`)
+	if match := ghRe.FindString(line); match != "" {
+		return match, "GHPAT001", true
+	}
+	return "", "", false
 }
 
 var (
 	scanPath   string
 	dryRun     bool
-	outputJSON bool
-	verbose    bool
+	jsonOutput bool
 )
 
 func main() {
-	flag.StringVar(&scanPath, "path", ".", "Directory or file to scan")
-	flag.BoolVar(&dryRun, "dry-run", true, "Report only, no revocation (default true)")
-	flag.BoolVar(&outputJSON, "json", false, "Output findings as JSON")
-	flag.BoolVar(&verbose, "verbose", false, "Show verbose info")
+	flag.StringVar(&scanPath, "path", ".", "Directory to scan")
+	flag.BoolVar(&dryRun, "dry-run", true, "Dry run mode")
+	flag.BoolVar(&jsonOutput, "json", false, "Output JSON")
 	flag.Parse()
 
-	findings := []Finding{}
-
-	err := filepath.Walk(scanPath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			if verbose {
-				fmt.Fprintf(os.Stderr, "skip %s: %v\n", path, err)
-			}
-			return nil
-		}
-		if info.IsDir() {
-			name := info.Name()
-			if name == ".git" || name == "vendor" || name == "node_modules" {
-				return filepath.SkipDir
-			}
-			return nil
-		}
-		if isBinary(path) {
-			return nil
-		}
-		content, err := os.ReadFile(path)
-		if err != nil {
-			return nil
-		}
-		lines := strings.Split(string(content), "\n")
-		for i, line := range lines {
-			awsRe := regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
-			if match := awsRe.FindString(line); match != "" {
-				findings = append(findings, Finding{
-					File:   path,
-					Line:   i + 1,
-					Secret: match,
-					RuleID: "AWS001",
-				})
-			}
-			if strings.Contains(line, "BEGIN RSA PRIVATE KEY") {
-				findings = append(findings, Finding{
-					File:   path,
-					Line:   i + 1,
-					Secret: "RSA_PRIVATE_KEY",
-					RuleID: "RSA001",
-				})
-			}
-			ghRe := regexp.MustCompile(`github_pat_[A-Za-z0-9_]{22,}`)
-			if match := ghRe.FindString(line); match != "" {
-				findings = append(findings, Finding{
-					File:   path,
-					Line:   i + 1,
-					Secret: match,
-					RuleID: "GHPAT001",
-				})
-			}
-		}
-		return nil
-	})
+	engine := &regexEngine{}
+	findings, err := scanner.Scan(scanPath, engine)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Scan error: %v\n", err)
 		os.Exit(1)
 	}
 
-	if outputJSON {
+	if jsonOutput {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
 		if err := enc.Encode(findings); err != nil {
-			fmt.Fprintf(os.Stderr, "JSON encode error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "JSON error: %v\n", err)
 			os.Exit(1)
 		}
 	} else {
@@ -107,26 +64,9 @@ func main() {
 	}
 
 	if !dryRun && len(findings) > 0 {
-		fmt.Fprintln(os.Stderr, "⚠️ Revocation not yet fully implemented, but would block commit.")
+		fmt.Fprintln(os.Stderr, "⚠️ Revocation would happen here")
 		os.Exit(1)
 	}
-	os.Exit(0)
-}
-
-func isBinary(path string) bool {
-	f, err := os.Open(path)
-	if err != nil {
-		return false
-	}
-	defer f.Close()
-	buf := make([]byte, 512)
-	n, _ := f.Read(buf)
-	for i := 0; i < n; i++ {
-		if buf[i] == 0 {
-			return true
-		}
-	}
-	return false
 }
 
 func truncateSecret(s string) string {
