@@ -11,10 +11,10 @@ import (
 )
 
 type Finding struct {
-	File    string `json:"file"`
-	Line    int    `json:"line"`
-	Secret  string `json:"secret"`
-	RuleID  string `json:"rule_id"`
+	File   string `json:"file"`
+	Line   int    `json:"line"`
+	Secret string `json:"secret"`
+	RuleID string `json:"rule_id"`
 }
 
 var (
@@ -56,33 +56,30 @@ func main() {
 		}
 		lines := strings.Split(string(content), "\n")
 		for i, line := range lines {
-			// AWS keys
 			awsRe := regexp.MustCompile(`AKIA[0-9A-Z]{16}`)
 			if match := awsRe.FindString(line); match != "" {
 				findings = append(findings, Finding{
-					File:    path,
-					Line:    i + 1,
-					Secret:  match,
-					RuleID:  "AWS001",
+					File:   path,
+					Line:   i + 1,
+					Secret: match,
+					RuleID: "AWS001",
 				})
 			}
-			// RSA private key
 			if strings.Contains(line, "BEGIN RSA PRIVATE KEY") {
 				findings = append(findings, Finding{
-					File:    path,
-					Line:    i + 1,
-					Secret:  "RSA_PRIVATE_KEY",
-					RuleID:  "RSA001",
+					File:   path,
+					Line:   i + 1,
+					Secret: "RSA_PRIVATE_KEY",
+					RuleID: "RSA001",
 				})
 			}
-			// GitHub tokens
 			ghRe := regexp.MustCompile(`github_pat_[A-Za-z0-9_]{22,}`)
 			if match := ghRe.FindString(line); match != "" {
 				findings = append(findings, Finding{
-					File:    path,
-					Line:    i + 1,
-					Secret:  match,
-					RuleID:  "GHPAT001",
+					File:   path,
+					Line:   i + 1,
+					Secret: match,
+					RuleID: "GHPAT001",
 				})
 			}
 		}
@@ -96,7 +93,10 @@ func main() {
 	if outputJSON {
 		enc := json.NewEncoder(os.Stdout)
 		enc.SetIndent("", "  ")
-		enc.Encode(findings)
+		if err := enc.Encode(findings); err != nil {
+			fmt.Fprintf(os.Stderr, "JSON encode error: %v\n", err)
+			os.Exit(1)
+		}
 	} else {
 		for _, f := range findings {
 			fmt.Printf("🔴 [%s] %s:%d: %s\n", f.RuleID, f.File, f.Line, truncateSecret(f.Secret))
@@ -107,7 +107,7 @@ func main() {
 	}
 
 	if !dryRun && len(findings) > 0 {
-		fmt.Fprintln(os.Stderr, "⚠️  Revocation not yet fully implemented, but would block commit.")
+		fmt.Fprintln(os.Stderr, "⚠️ Revocation not yet fully implemented, but would block commit.")
 		os.Exit(1)
 	}
 	os.Exit(0)
