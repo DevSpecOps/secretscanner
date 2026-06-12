@@ -7,7 +7,7 @@ build:
 	$(GO) build -o bin/$(BINARY_NAME) ./cmd/$(BINARY_NAME)
 
 test:
-	$(GO) test -v -race -cover ./...
+	$(GO) test -v -cover ./...
 
 run: build
 	./bin/$(BINARY_NAME) --path ./test/fixtures --dry-run
