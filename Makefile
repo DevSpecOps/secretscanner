@@ -23,3 +23,6 @@ lint:
 
 dev: build
 	./bin/$(BINARY_NAME) --path . --dry-run --verbose
+
+docker-build:
+	docker build -t secretscanner:latest .
