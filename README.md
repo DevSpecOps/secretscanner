@@ -1,9 +1,11 @@
 # 🔒 SecretScanner – Self-hosted secrets scanner for CI/CD
 
-[![CI](https://github.com/DevSpecOps/secretscanner/actions/workflows/ci.yaml/badge.svg)](https://github.com/DevSpecOps/secretscanner/actions/workflows/ci.yaml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/DevSpecOps/secretscanner)](https://goreportcard.com/report/github.com/DevSpecOps/secretscanner)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/DevSpecOps/secretscanner/badge)](https://securityscorecards.dev/viewer/?uri=github.com/DevSpecOps/secretscanner)
+<p align="center">
+  <img src="https://img.shields.io/github/go-mod/go-version/DevSpecOps/secretscanner" alt="Go version">
+  <img src="https://img.shields.io/github/actions/workflow/status/DevSpecOps/secretscanner/ci.yaml?branch=main" alt="CI">
+  <img src="https://goreportcard.com/badge/github.com/DevSpecOps/secretscanner" alt="Go Report Card">
+  <img src="https://img.shields.io/github/stars/DevSpecOps/secretscanner?style=social" alt="GitHub stars">
+</p>
 
 > **Lightning‑fast, self‑hosted secret scanner** that detects and blocks leaked credentials before they reach production.  
 > Works with GitHub Actions, GitLab CI, pre-commit, and any CI system.
