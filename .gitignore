@@ -1,0 +1,8 @@
+/bin/
+/vendor/
+.idea/
+*.exe
+*.test
+*.out
+coverage.txt
+.DS_Store
