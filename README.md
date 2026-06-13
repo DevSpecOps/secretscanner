@@ -27,16 +27,21 @@
 git clone https://github.com/DevSpecOps/secretscanner.git
 cd secretscanner
 go build -o bin/secretscanner ./cmd/secretscanner
-./bin/secretscanner --path ./test/fixtures --dry-run\
+./bin/secretscanner --path ./test/fixtures --dry-run
+```
 
-With Docker
-bash
+### With Docker
+
+```bash
 docker build -t secretscanner .
 docker run --rm -v $(pwd):/workspace secretscanner --path /workspace --dry-run
-Using GitHub Action
-Create .github/workflows/secrets-scan.yml:
+```
 
-yaml
+### Using GitHub Action
+
+Create `.github/workflows/secrets-scan.yml`:
+
+```yaml
 name: Scan secrets
 on: [push, pull_request]
 
@@ -50,10 +55,13 @@ jobs:
         with:
           path: '.'
           dry-run: 'false'   # fails if secrets found
-Pre-commit hook
-Add to .pre-commit-config.yaml:
+```
 
-yaml
+### Pre-commit hook
+
+Add to `.pre-commit-config.yaml`:
+
+```yaml
 repos:
   - repo: local
     hooks:
@@ -63,36 +71,55 @@ repos:
         language: system
         types: [text]
         pass_filenames: false
-📊 Metrics and monitoring
+```
+
+## 📊 Metrics and monitoring
+
 Run with Prometheus metrics endpoint:
 
-bash
+```bash
 ./bin/secretscanner --path . --dry-run --metrics :9090
+```
+
 In another terminal:
 
-bash
+```bash
 curl http://localhost:9090/metrics
+```
+
 Example output:
 
-text
+```
 # HELP secretscanner_secrets_found_total Total number of secrets found by rule
 # TYPE secretscanner_secrets_found_total counter
 secretscanner_secrets_found_total{rule_id="AWS001"} 1
 secretscanner_secrets_found_total{rule_id="GHPAT001"} 1
-🧪 Testing
-bash
+```
+
+## 🧪 Testing
+
+```bash
 go test ./internal/... -v
+```
+
 Coverage: ~85-90%
 
-🤝 Contributing
-Please read CONTRIBUTING.md. TL;DR:
+## 🤝 Contributing
 
-bash
+Please read [CONTRIBUTING.md](CONTRIBUTING.md). TL;DR:
+
+```bash
 make dev
-📄 License
-Apache 2.0 – see LICENSE file.
+```
 
-💖 Support the project
+## 📄 License
+
+Apache 2.0 – see [LICENSE](LICENSE) file.
+
+## 💖 Support the project
+
 If you find SecretScanner useful, consider donating – Bitcoin and Ethereum accepted.
 
-Star this repo ⭐ to help others discover it!
+---
+
+**Star** ⭐ this repo to help others discover it!
